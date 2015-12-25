@@ -1,50 +1,17 @@
-const isPromise = obj => obj && typeof obj.then === 'function';
-const hasPromiseProps = obj => Object.keys(obj).some(key => isPromise(obj[key]));
+/**
+ * @file 异步请求处理middleware
+ * @author lyf
+ * @date 2015/12/25
+ */
 
-const resolveProps = obj => {
-  const props = Object.keys(obj);
-  const values = props.map(prop => obj[prop]);
+import _genesis from './genesis'
+import _trader from './trader'
+import _terminator from './terminator'
 
-  return Promise.all(values).then(resolvedArray => {
-    return props.reduce((acc, prop, index) => {
-      acc[prop] = resolvedArray[index];
-      return acc;
-    }, {});
-  });
-};
-
-const getNonPromiseProperties = obj => {
-  return Object.keys(obj).filter(key => !isPromise(obj[key])).reduce((acc, key) => {
-    acc[key] = obj[key];
-    return acc;
-  }, {});
-};
-
-
-export default function promisePropsMiddleware() {
-  return next => action => {
-    const { types, payload } = action;
-    if (!types || !hasPromiseProps(action.payload)) {
-      return next(action);
-    }
-
-    const nonPromiseProperties = getNonPromiseProperties(payload);
-
-    const [PENDING, RESOLVED, REJECTED] = types;
-
-    const pendingAction = { type: PENDING, payload: nonPromiseProperties };
-    const successAction = { type: RESOLVED };
-    const failureAction = { type: REJECTED, error: true, meta: nonPromiseProperties };
-    if (action.meta) {
-      [pendingAction, successAction, failureAction].forEach(nextAction => {
-        nextAction.meta = { ...nextAction.meta, ...action.meta }
-      });
-    }
-
-    next(pendingAction);
-    return resolveProps(payload).then(
-      results => next({ ...successAction, payload: results }),
-      error => next({ ...failureAction, payload: error })
-    );
-  };
+let options = {
+  pendingStack: []
 }
+
+export var genesis = _genesis(options)
+export var trader = _trader
+export var terminator = _terminator(options)
