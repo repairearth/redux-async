@@ -56,7 +56,7 @@ export const PromiseAll = arr => {
     };
 
     args.forEach((val, i) => {
-      if (typeof val.then === 'function') {
+      if (isPromise(val)) {
         val.then(callback(i), callback(i, true))
       } else {
         callback(i)(val);
