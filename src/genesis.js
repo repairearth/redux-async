@@ -5,8 +5,7 @@
  */
 
 const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE';
-const isFunc = arg => typeof arg === 'function';
-const isPromise = val => val && typeof val.then === 'function';
+import { isPromise, hasPromiseProps } from './utils'
 
 /**
  * meta.showLoading {boolean} @default [true] if payload is a promise
@@ -16,27 +15,17 @@ const isPromise = val => val && typeof val.then === 'function';
 export default ({pendingStack}) => ({dispatch}) => next => action => {
   let { meta = {}, payload = {}, ignore } = action;
 
-  if (ignore) return next(action); // 系统级别的action，自动忽略
-
-  if (isPromise(action.payload)) {
-    const isShowLoading = pendingStack.length === 0 && meta.showLoading !== false && !meta.onLoad;
+  if (isPromise(payload) || hasPromiseProps(payload)) {
+    const isShowLoading = pendingStack.length === 0 && meta.showLoading !== false;
 
     if (isShowLoading) {
+      pendingStack.push(action.type);
       dispatch({
         type: RECEIVE_LOADING_STATE,
-        payload: true,
-        ignore: true
+        payload: true
       })
     }
-
-    pendingStack.push(action.type);
-    dispatch({
-      type: `${action.type}_PENDING`,
-      ignore: true
-    });
   }
-
-  isFunc(meta.onLoad) && meta.onLoad();
 
   return next(action);
 }

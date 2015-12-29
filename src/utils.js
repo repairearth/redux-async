@@ -3,10 +3,12 @@
  * @author lyf
  * @date 2015/12/25
  */
+
 export const API_REQUEST_ERROR = 'API_REQUEST_ERROR';
 export const isFunc = arg => typeof arg === 'function';
+export const isObject = obj => Object.prototype.toString.call(obj) === '[object Object]';
 export const isPromise = obj => obj && typeof obj.then === 'function';
-export const hasPromiseProps = obj => Object.keys(obj).some(key => isPromise(obj[key]));
+export const hasPromiseProps = obj => obj && Object.keys(obj).some(key => isPromise(obj[key]));
 
 export const getDeps = func => {
   if (isFunc(func)) {
@@ -22,13 +24,13 @@ export const inject = (func, payload) => {
   return func.apply(null, getDeps(func).map(name => payload[name]));
 };
 
-export const getResult = (response, returnPureData) => {
-  if (returnPureData) {
-    return Array.isArray(response) ? response.map(item => item.data) : response.data;
-  }
+export const isCommonAxiosResponse = response => {
+  return isObject(response) && ['data', 'status', 'statusText', 'headers', 'config'].every(key => key in response);
+};
 
-  return response;
-}
+export const isUCErrorResponse = response => {
+  return isObject(response) && ['code', 'host_id', 'message', 'request_id', 'server_time'].every(key => key in response);
+};
 
 /**
  * 简化版Promise.all

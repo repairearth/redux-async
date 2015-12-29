@@ -1,4 +1,4 @@
-redux-async
+redux-async-promise
 =============
 
 [![NPM version][npm-image]][npm-url]
@@ -12,15 +12,15 @@ redux-async
 ## Install
 
 ```js
-npm install --save redux-async
+npm install redux-async-promise --save
 ```
 
 ## Adding as middleware
 
 ```js
-import asyncMiddleware from 'redux-async';
+import async from 'redux-async-promise';
 let createStoreWithMiddleware = applyMiddleware(
-  asyncMiddleware,
+  async,
 )(createStore);
 ```
 
@@ -28,69 +28,49 @@ let createStoreWithMiddleware = applyMiddleware(
 
 ```js
 // action-creators.js
-export const loadUsersForAdmin = adminId => {
-  return {
-    types: [GET_USERS_REQUEST, GET_USERS_SUCCESS, GET_USERS_FAILURE],
-    payload: {
-      users: api.getUsersForAdmin(adminId).then(response => response.data.users),
-      adminId
-    }
-  };
-}
+export var fetchXxxxx = createAction('Xxxx',
+  // payload
+  options => ({
+    propA: new ModelA.GET(), // a promise
+    propB: new ModelB.GET(), // a promise
 
-// reducers.js
-import { createReducer } from 'redux-create-reducer';
-import { GET_USERS_REQUEST, GET_USERS_SUCCESS, GET_USERS_FAILURE } from '../constants/actions';
+    propC: (propB, propA) => {
+      // 依赖propA, propB，顺序自己定，参数名跟上面要保持一致，否则是undefined
+      // 这个最好提出一个单独的函数，比如 function getPropC (propA, propB) {}
+      // 然后 propC: (propA, PropB) => getPropC(propA, propB)
+      console.log(propA, propB);
+      return new ModelC.GET()
+    },
+    propD: propC => Promise.resolve(propC)
+  }),
 
-const initialState = {};
+  // meta
+  options => ({
+    propA: {
+      // 单个请求success, error处理
+      onSuccess(data) {},
+      onError(data) {}
+    },
+    propB: {
+      onSuccess(data) {},
+      onError(data) {}
+    },
 
-export default createReducer(initialState, {
-  [GET_USERS_REQUEST](state, action) {
-    const { adminId } = action.payload;
+    // 最终结果success, error处理
+    success: 'xxxx', // 字符串或者函数 success(data) {}
+    error: 'xxx',    // 字符串或者函数 success(data) {},
+    always(data) {}
+  })
+)
 
-    return {
-      isFetching: true,
-      adminId // we always have access to all non promise properties
-    };
-  },
-  [GET_USERS_SUCCESS](state, action) {
-    const { adminId, users } = action.payload;
-
-    return {
-      isFetching: false,
-      users, // all promise properties resolved
-      adminId // we always have access to all non promise properties - same as above
-    };
-  },
-  [GET_USERS_FAILURE](state, action) {
-    // assert(action.error === true && action.payload instanceof Error);
-
-    // when a property gets rejected then the non promise properties go in the meta object
-    // assert(action.meta.adminId);
-
-    return {errorMessage: action.payload.message}; // from Error.prototype.message
-  },
-});
-
-
-// smart-container.js
-// ... snipped to the middle of the render function
-<div>
-  {
-    !users ?
-      <button onClick={() => dispatch(loadUsersForAdmin(localStorage.adminId))}>Load Users</button> :
-      (isFetching) ? (<span>isFetching for {adminId}...</span>) : (<pre>{JSON.stringify(users, null, 2)}</pre>)
-  }
-  { errorMessage && <div className="error">errorMessage</div> }
-</div>
 ```
 
 
-[npm-image]: https://img.shields.io/npm/v/redux-async.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/redux-async
-[travis-image]: https://img.shields.io/travis/symbiont-io/redux-async.svg?style=flat-square
-[travis-url]: https://travis-ci.org/symbiont-io/redux-async
-[coveralls-image]: https://img.shields.io/coveralls/kolodny/redux-async.svg?style=flat-square
-[coveralls-url]: https://coveralls.io/r/kolodny/redux-async
-[downloads-image]: http://img.shields.io/npm/dm/redux-async.svg?style=flat-square
-[downloads-url]: https://npmjs.org/package/redux-async
+[npm-image]: https://img.shields.io/npm/v/redux-async-promise.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/redux-async-promise
+[travis-image]: https://img.shields.io/travis/symbiont-io/redux-async-promise.svg?style=flat-square
+[travis-url]: https://travis-ci.org/symbiont-io/redux-async-promise
+[coveralls-image]: https://img.shields.io/coveralls/kolodny/redux-async-promise.svg?style=flat-square
+[coveralls-url]: https://coveralls.io/r/kolodny/redux-async-promise
+[downloads-image]: http://img.shields.io/npm/dm/redux-async-promise.svg?style=flat-square
+[downloads-url]: https://npmjs.org/package/redux-async-promise

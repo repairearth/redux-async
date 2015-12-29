@@ -1,8 +1,8 @@
 {
-  "name": "redux-async",
-  "version": "2.0.1",
+  "name": "redux-async-promise",
+  "version": "1.0.0",
   "description": "dispatch async actions in redux",
-  "main": "./lib/index.js",
+  "main": "./lib/trader.js",
   "scripts": {
     "build": "babel src --out-dir lib",
     "prepublish": "npm run test && npm run build",
@@ -12,18 +12,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kolodny/redux-async.git"
+    "url": "git+https://github.com/weinot/redux-async.git"
   },
   "keywords": [
     "redux",
+    "promise",
+    "async",
     "react"
   ],
-  "author": "Moshe Kolodny",
+  "author": "vnot",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kolodny/redux-async/issues"
+    "url": "https://github.com/weinot/redux-async/issues"
   },
-  "homepage": "https://github.com/kolodny/redux-async#readme",
+  "homepage": "https://github.com/weinot/redux-async#readme",
   "devDependencies": {
     "babel": "^5.8.23",
     "babel-core": "^5.8.22",

@@ -7,13 +7,12 @@
 import * as utils from './utils'
 
 export default store => next => action => {
-  const { payload, meta={} } = action;
-  const returnPureData = meta.returnPureData;
+  const { payload } = action;
 
   if (utils.isPromise(payload)) {
     return payload.then(
-      result => next({...action, payload: utils.getResult(result, returnPureData)}),
-      error => next({...action, payload: utils.getResult(error, returnPureData), error: true})
+      result => next({...action, payload: result}),
+      error => next({...action, payload: error, error: true})
     );
   } else if (utils.hasPromiseProps(payload)) {
     return process(action, next);
@@ -54,6 +53,7 @@ const buildResolvedQueue = payload => {
   }
 
   parseDependencies();
+
   return resolvedQueue;
 };
 
@@ -89,23 +89,23 @@ const process = (action, next) => {
 
   const resolver = props => resolvedArray => {
     return props.reduce((acc, prop, index) => {
-      let originResult = resolvedArray[index];
-      let finalResult = utils.getResult(originResult, meta.returnPureData);  // returnPureData default false, 兼容现有逻辑;
+      let result = resolvedArray[index];
 
       if (meta[prop]) {
         // onSuccess, onError handle if there is.
         let { onSuccess, onError } = meta[prop];
-        if (originResult[utils.API_REQUEST_ERROR]) {
-          onError && onError(finalResult);
+
+        if (result[utils.API_REQUEST_ERROR]) {
+          onError && onError(result);
         } else {
-          onSuccess && onSuccess(finalResult);
+          onSuccess && onSuccess(result);
         }
       }
 
-      delete finalResult[utils.API_REQUEST_ERROR]; // delete non-used property
-      payload[prop] = finalResult;
+      delete result[utils.API_REQUEST_ERROR]; // delete non-used property
+      payload[prop] = result;
+
       return payload;
     }, null);
   };
 };
-

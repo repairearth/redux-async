@@ -8,7 +8,7 @@ const getNewStore = (saveAction) => {
     if (saveAction) saveAction.action = action;
     return action;
   }
-  const store = applyMiddleware(async)(createStore)(reducer);
+  const store = applyMiddleware(async.trader)(createStore)(reducer);
   return store;
 };
 
@@ -144,7 +144,6 @@ describe('redux-async', () => {
     const store = getNewStore();
     store.subscribe(() => {
       const state = store.getState();
-      console.log(state);
       expect(state.error).toBeTruthy();
       expect(state.payload.a).toBe(1);
       expect(state.payload.d).toBe(2);
@@ -166,6 +165,45 @@ describe('redux-async', () => {
         },
         f: (e) => {
           return Promise.reject(new Error('6'));
+        }
+      }
+    });
+  });
+
+  it('handles onSucess, onError if there is', (done) => {
+    const store = getNewStore();
+    let callbackA, callbackB, callbackC;
+    store.subscribe(() => {
+      expect(callbackA).toBe(1);
+      expect(callbackB).toBe(2);
+      expect(callbackC).toBeAn(Error);
+      expect(callbackC.message).toEqual('error message');
+      done();
+    });
+    store.dispatch({
+      type: 'ONSUCCESS_AND_ONERROR',
+      payload: {
+        a: Promise.resolve(1),
+        b: Promise.resolve(2),
+        c: (b) => {
+          return Promise.reject(new Error('error message'));
+        }
+      },
+      meta: {
+        a: {
+          onSuccess(data) {
+            callbackA = data;
+          }
+        },
+        b: {
+          onSuccess(data) {
+            callbackB = data;
+          }
+        },
+        c: {
+          onError(data) {
+            callbackC = data;
+          }
         }
       }
     });

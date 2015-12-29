@@ -4,24 +4,50 @@
  * @date 2015/12/25
  */
 
+import { isFunc, isCommonAxiosResponse, isUCErrorResponse } from './utils'
+
 const RECEIVE_GLOBAL_MESSAGE = 'RECEIVE_GLOBAL_MESSAGE';
 const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE';
-const isFunc = (arg) => typeof arg === 'function';
-const createGlobalMessage = (type, message, origin) => ({type, message, origin});
-const getErrorMessage = data => {
-  if (Array.isArray(data)) {
-    const errorResponse = data.filter(item => {
-      const { status } = item.data;
-      const isSuccess = status >= 200 && status < 300 || status === 304;
-      return !isSuccess;
-    });
+const createGlobalMessage = (type, message, originData) => ({type, message, originData});
 
-    if (errorResponse.length) {
-      return errorResponse[0].data.message;
-    }
+const transformResponse = response => {
+
+  if (Array.isArray(response)) {
+    return response.map(item => isCommonAxiosResponse(item) ? item.data : item);
+  }
+  if (isCommonAxiosResponse(response)) {
+    return response.data;
   }
 
-  return data.message;
+  Object.keys(response).forEach(prop => {
+    if (isCommonAxiosResponse(response[prop])) {
+      response[prop] = response[prop].data;
+    }
+  });
+
+  return response;
+};
+
+const getErrorMessage = data => {
+  let response = [].concat(data);
+  let errorMessage = '';
+
+  response.some(item => {
+    if (isCommonAxiosResponse(item)) {
+      const { status, data } = item;
+      const isSuccess = status >= 200 && status < 300 || status === 304;
+      if (!isSuccess) {
+        errorMessage = data.message;
+        return true;
+      }
+    }
+    if (isUCErrorResponse(item)) {
+      errorMessage = item.message;
+      return true;
+    }
+  });
+
+  return errorMessage;
 };
 
 /**
@@ -32,68 +58,59 @@ const getErrorMessage = data => {
  */
 export default ({pendingStack}) => ({dispatch}) => next => action => {
   const isError = action.error;
-  let { meta = {}, payload = {}, ignore } = action;
-  let { data } = payload;
-  let isShowGlobalMessage;
+  let { type, meta = {}, payload = {} } = action;
 
-  if (ignore) return next(action);  // 系统级别的action，自动忽略
+  if ([RECEIVE_GLOBAL_MESSAGE, RECEIVE_LOADING_STATE].indexOf(type) !== -1) {
+    return next(action);
+  }
 
-  // -----------------------------------------
   const result = next(action);
-  // -----------------------------------------
 
   // ------------全局loading处理---------------
   const idx = pendingStack.indexOf(action.type);
 
   if (idx !== -1) {
-    dispatch({
-      type: `${action.type}_FINISH`,
-      payload: payload,
-      ignore: true
-    });
     pendingStack.splice(idx, 1);
-  }
 
-  if (pendingStack.length === 0) { // loading完成，设置loading状态为false
-    dispatch({
-      type: RECEIVE_LOADING_STATE,
-      payload: false,
-      ignore: true
-    })
+    if (pendingStack.length === 0) { // loading完成，设置loading状态为false
+      dispatch({
+        type: RECEIVE_LOADING_STATE,
+        payload: false
+      })
+    }
   }
 
   // --------- 全局消息处理（错误，成功）-------------
-  if (Array.isArray(payload)) {
-    data = payload.map(item => item.data);
-  }
+  let response = transformResponse(payload);
+  let isShowGlobalMessage;
 
   if (isError) {
+    let errorMessage = getErrorMessage(payload);
+
     if (isFunc(meta.error)) {
-      meta.error(data);
+      meta.error(response);
     } else {
       isShowGlobalMessage = true;
-      data = createGlobalMessage('error', meta.error || getErrorMessage(data), data);
+      response = createGlobalMessage('error', meta.error || errorMessage, response);
     }
   } else if (meta.success) {
     if (isFunc(meta.success)) {
-      meta.success(data);
+      meta.success(response);
     } else {
       isShowGlobalMessage = true;
-      data = createGlobalMessage('success', meta.success, data);
+      response = createGlobalMessage('success', meta.success, response);
     }
   }
 
   if (isShowGlobalMessage) {
-    // 系统级action, 增加ignore属性
     dispatch({
       type: RECEIVE_GLOBAL_MESSAGE,
-      payload: data,
-      ignore: true
+      payload: response
     })
   }
 
   // 本来想用finally，怕关键字会有问题，先这样吧
-  isFunc(meta.always) && meta.always(action);
+  isFunc(meta.always) && meta.always(response);
 
   return result;
 }
