@@ -24,7 +24,7 @@ export const inject = (func, payload) => {
   return func.apply(null, getDeps(func).map(name => payload[name]));
 };
 
-export const isCommonAxiosResponse = response => {
+export const isAxiosResponse = response => {
   return isObject(response) && ['data', 'status', 'statusText', 'headers', 'config'].every(key => key in response);
 };
 

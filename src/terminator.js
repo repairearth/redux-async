@@ -4,7 +4,7 @@
  * @date 2015/12/25
  */
 
-import { isFunc, isCommonAxiosResponse, isUCErrorResponse } from './utils'
+import { isFunc, isAxiosResponse, isUCErrorResponse } from './utils'
 
 const RECEIVE_GLOBAL_MESSAGE = 'RECEIVE_GLOBAL_MESSAGE';
 const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE';
@@ -13,14 +13,18 @@ const createGlobalMessage = (type, message, originData) => ({type, message, orig
 const transformResponse = response => {
 
   if (Array.isArray(response)) {
-    return response.map(item => isCommonAxiosResponse(item) ? item.data : item);
+    response = [...response];
+    return response.map(item => isAxiosResponse(item) ? item.data : item);
   }
-  if (isCommonAxiosResponse(response)) {
+
+  if (isAxiosResponse(response)) {
     return response.data;
   }
 
+  response = {...response};
+
   Object.keys(response).forEach(prop => {
-    if (isCommonAxiosResponse(response[prop])) {
+    if (isAxiosResponse(response[prop])) {
       response[prop] = response[prop].data;
     }
   });
@@ -28,36 +32,44 @@ const transformResponse = response => {
   return response;
 };
 
+/**
+ * @param data {object|array}
+ * @returns {string}
+ */
 const getErrorMessage = data => {
   let response = [].concat(data);
   let errorMessage = '';
 
   response.some(item => {
-    if (isCommonAxiosResponse(item)) {
-      const { status, data } = item;
-      const isSuccess = status >= 200 && status < 300 || status === 304;
-      if (!isSuccess) {
-        errorMessage = data.message;
-        return true;
-      }
-    }
     if (isUCErrorResponse(item)) {
       errorMessage = item.message;
       return true;
     }
+    return Object.keys(item).some(prop => {
+      if (isUCErrorResponse(item[prop])) {
+        errorMessage = item[prop].message;
+        return true;
+      }
+    })
   });
 
   return errorMessage;
 };
 
+const dispatchGlobalMessage = (dispatch, data) => {
+  dispatch({
+    type: RECEIVE_GLOBAL_MESSAGE,
+    payload: data
+  })
+}
+
 /**
- * meta.error {string|function}
- * meta.success {string|function}
+ * meta.error {object} - {text: '', handler(data) {}}
+ * meta.success {object} - {text: '', handler(data) {}}
  * meta.always {function}
  * @param dispatch
  */
 export default ({pendingStack}) => ({dispatch}) => next => action => {
-  const isError = action.error;
   let { type, meta = {}, payload = {} } = action;
 
   if ([RECEIVE_GLOBAL_MESSAGE, RECEIVE_LOADING_STATE].indexOf(type) !== -1) {
@@ -82,35 +94,22 @@ export default ({pendingStack}) => ({dispatch}) => next => action => {
 
   // --------- 全局消息处理（错误，成功）-------------
   let response = transformResponse(payload);
-  let isShowGlobalMessage;
+  const { success={}, error={}, always } = meta;
 
-  if (isError) {
-    let errorMessage = getErrorMessage(payload);
+  if (action.error) {
+    let { text, handler } = error;
+    let errorMessage = text || getErrorMessage(response);
 
-    if (isFunc(meta.error)) {
-      meta.error(response);
-    } else {
-      isShowGlobalMessage = true;
-      response = createGlobalMessage('error', meta.error || errorMessage, response);
-    }
-  } else if (meta.success) {
-    if (isFunc(meta.success)) {
-      meta.success(response);
-    } else {
-      isShowGlobalMessage = true;
-      response = createGlobalMessage('success', meta.success, response);
-    }
+    dispatchGlobalMessage(dispatch, createGlobalMessage('error', errorMessage));
+    isFunc(handler) && handler(response);
+  } else {
+    let { text, handler } = success;
+
+    text && dispatchGlobalMessage(dispatch, createGlobalMessage('success', text));
+    isFunc(handler) && handler(response);
   }
 
-  if (isShowGlobalMessage) {
-    dispatch({
-      type: RECEIVE_GLOBAL_MESSAGE,
-      payload: response
-    })
-  }
-
-  // 本来想用finally，怕关键字会有问题，先这样吧
-  isFunc(meta.always) && meta.always(response);
+  isFunc(always) && always(action);
 
   return result;
 }
