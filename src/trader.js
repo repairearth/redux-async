@@ -37,7 +37,7 @@ const buildResolvedQueue = payload => {
     let nextProps;
 
     dependenciesProps.forEach(prop => {
-      let isAllDepsResolved = utils.getDeps(payload[prop]).every(dep => resolvedProps.indexOf(dep) !== -1);
+      let isAllDepsResolved = utils.getDeps(payload[prop]).every(dep => resolvedProps.indexOf(dep) !== -1 || !(dep in payload));
       if (isAllDepsResolved) {
         nextProps = nextProps || {};
         nextProps[prop] = payload[prop];
@@ -80,7 +80,7 @@ const process = (action, next) => {
 
   const resolveProps = (obj) => {
     let props = Object.keys(obj);
-    let values = props.map(prop => utils.inject(obj[prop], payload));
+    let values = props.map(prop => utils.execute(obj[prop], payload));
 
     currentResolvedProps = props;
 

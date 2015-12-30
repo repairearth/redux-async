@@ -5,23 +5,33 @@
  */
 
 export const API_REQUEST_ERROR = 'API_REQUEST_ERROR';
-export const isFunc = arg => typeof arg === 'function';
+export const isFn = arg => typeof arg === 'function';
 export const isObject = obj => Object.prototype.toString.call(obj) === '[object Object]';
 export const isPromise = obj => obj && typeof obj.then === 'function';
 export const hasPromiseProps = obj => obj && Object.keys(obj).some(key => isPromise(obj[key]));
 
-export const getDeps = func => {
-  if (isFunc(func)) {
-    return func.toString().match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m)[1].replace(/ /g, '').split(',');
+export const inject = (...deps) => {
+  return {
+    to(fn) {
+      fn.deps = deps;
+      return fn;
+    }
+  }
+};
+
+export const getDeps = fn => {
+  if (isFn(fn)) {
+    //return func.toString().match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m)[1].replace(/ /g, '').split(',');
+    return fn.deps;
   }
   return null;
 };
 
-export const hasDeps = func => getDeps(func) !== null;
+export const hasDeps = fn => getDeps(fn) !== null;
 
-export const inject = (func, payload) => {
-  if (!isFunc(func) || !hasDeps(func)) return func;
-  return func.apply(null, getDeps(func).map(name => payload[name]));
+export const execute = (fn, payload) => {
+  if (!isFn(fn) || !hasDeps(fn)) return fn;
+  return fn.apply(null, getDeps(fn).map(name => payload[name]));
 };
 
 export const isAxiosResponse = response => {

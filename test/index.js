@@ -1,7 +1,7 @@
 import expect from 'expect';
 import { createStore, applyMiddleware } from 'redux';
 
-import async from '../src';
+import async, { inject } from '../src';
 
 const getNewStore = (saveAction) => {
   const reducer = function (state, action) {
@@ -68,10 +68,10 @@ describe('redux-async', () => {
       payload: {
         a: Promise.resolve(1),
         b: Promise.resolve(2),
-        c: (a, b) => {
+        c: inject('a', 'b').to((a, b) => {
           (depA = a, depB = b);
           return Promise.resolve(3)
-        }
+        })
       }
     });
   });
@@ -94,14 +94,14 @@ describe('redux-async', () => {
       payload: {
         a: Promise.resolve(1),
         b: Promise.resolve(2),
-        c: (a, b) => {
+        c: inject('a', 'b').to((a, b) => {
           (depA = a, depB = b);
           return Promise.resolve(3);
-        },
-        d: (c, b, a) => {
+        }),
+        d: inject('c', 'b', 'a', 'e').to((c, b, a) => {
           (depDA = a, depDB = b, depDC = c);
           return Promise.resolve(4);
-        }
+        })
       },
       meta: {
         other: 'other'
@@ -130,12 +130,12 @@ describe('redux-async', () => {
         b: 'string',
         c: 100,
         d: Promise.reject(new Error('another error property')),
-        e: (d) => {
+        e: inject('d').to((d) => {
           return Promise.reject(new Error('5'));
-        },
-        f: (a) => {
+        }),
+        f: inject('a').to((a) => {
           return Promise.reject(new Error('6'));
-        }
+        })
       }
     });
   });
@@ -160,12 +160,12 @@ describe('redux-async', () => {
         b: 'string',
         c: 100,
         d: Promise.resolve(2),
-        e: (d) => {
+        e: inject('d').to((d) => {
           return Promise.reject(new Error('5'));
-        },
-        f: (e) => {
+        }),
+        f: inject('e', 'g').to((e) => {
           return Promise.reject(new Error('6'));
-        }
+        })
       }
     });
   });
@@ -185,9 +185,9 @@ describe('redux-async', () => {
       payload: {
         a: Promise.resolve(1),
         b: Promise.resolve(2),
-        c: (b) => {
+        c: inject('b').to((b) => {
           return Promise.reject(new Error('error message'));
-        }
+        })
       },
       meta: {
         a: {

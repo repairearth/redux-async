@@ -12,6 +12,8 @@ let options = {
   pendingStack: []
 }
 
+export { inject } from './utils'
+
 export default {
   genesis: _genesis(options),
   trader,

@@ -13,7 +13,7 @@ import { isPromise, hasPromiseProps } from './utils'
  * @param dispatch
  */
 export default ({pendingStack}) => ({dispatch}) => next => action => {
-  let { meta = {}, payload = {}, ignore } = action;
+  let { meta = {}, payload = {} } = action;
 
   if (isPromise(payload) || hasPromiseProps(payload)) {
     const isShowLoading = pendingStack.length === 0 && meta.showLoading !== false;

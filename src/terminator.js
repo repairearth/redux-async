@@ -4,7 +4,7 @@
  * @date 2015/12/25
  */
 
-import { isFunc, isAxiosResponse, isUCErrorResponse } from './utils'
+import { isFn, isAxiosResponse, isUCErrorResponse } from './utils'
 
 const RECEIVE_GLOBAL_MESSAGE = 'RECEIVE_GLOBAL_MESSAGE';
 const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE';
@@ -101,15 +101,15 @@ export default ({pendingStack}) => ({dispatch}) => next => action => {
     let errorMessage = text || getErrorMessage(response);
 
     dispatchGlobalMessage(dispatch, createGlobalMessage('error', errorMessage));
-    isFunc(handler) && handler(response);
+    isFn(handler) && handler(response);
   } else {
     let { text, handler } = success;
 
     text && dispatchGlobalMessage(dispatch, createGlobalMessage('success', text));
-    isFunc(handler) && handler(response);
+    isFn(handler) && handler(response);
   }
 
-  isFunc(always) && always(action);
+  isFn(always) && always(action);
 
   return result;
 }
