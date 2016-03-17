@@ -28,6 +28,8 @@ let createStoreWithMiddleware = applyMiddleware(
 
 ```js
 // action-creators.js
+import { $inject } from 'redux-async-promise';
+
 export var fetchXxxxx = createAction('Xxxx',
   // payload
   options => ({
@@ -42,6 +44,9 @@ export var fetchXxxxx = createAction('Xxxx',
       return new ModelC.GET()
     },
     propD: propC => Promise.resolve(propC)
+    
+    // uglifyjs压缩导致依赖丢失的，可以使用$inject来显示注入参数
+    propE: $inject(getPropE)('propD')
   }),
 
   // meta
@@ -62,6 +67,10 @@ export var fetchXxxxx = createAction('Xxxx',
     always(data) {}
   })
 )
+
+function getPropE(propD) {
+  return Promise.resolve(propD)
+}
 
 ```
 
