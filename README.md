@@ -28,6 +28,7 @@ let createStoreWithMiddleware = applyMiddleware(
 
 ```js
 // action-creators.js
+import { createAction } from 'redux-actions'
 import { $inject } from 'redux-async-promise';
 
 export var fetchXxxxx = createAction('Xxxx',

@@ -13,9 +13,6 @@ let options = {
 }
 
 export { $inject } from './utils'
-
-export default {
-  genesis: _genesis(options),
-  trader,
-  terminator: _terminator(options)
-}
+export const genesis = _genesis(options)
+export const terminator = _terminator(options)
+export default trader

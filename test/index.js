@@ -8,7 +8,7 @@ const getNewStore = (saveAction) => {
     if (saveAction) saveAction.action = action;
     return action;
   }
-  const store = applyMiddleware(async.trader)(createStore)(reducer);
+  const store = applyMiddleware(async)(createStore)(reducer);
   return store;
 };
 
