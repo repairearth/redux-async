@@ -67,7 +67,7 @@ describe('redux-async', () => {
       type: 'PAYLOAD_OF_MULTI_REQUEST',
       payload: {
         a: Promise.resolve(1),
-        b: Promise.resolve(2),
+        b: (a) => Promise.resolve(++a),
         c: $inject((a, b) => {
           (depA = a, depB = b);
           return Promise.resolve(3)

@@ -12,15 +12,14 @@ export const hasPromiseProps = obj => obj && Object.keys(obj).some(key => isProm
 
 export const $inject = fn => (...deps) => {
   if (isFn(fn) && deps.length) {
-    fn.deps = deps
+    fn.$deps = deps
   }
   return fn
 }
 
 export const getDeps = fn => {
   if (isFn(fn)) {
-    // return func.toString().match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m)[1].replace(/ /g, '').split(',');
-    return fn.deps
+    return fn.$deps || fn.toString().match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m)[1].replace(/ /g, '').split(',')
   }
   return null
 }
