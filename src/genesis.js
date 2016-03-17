@@ -1,10 +1,10 @@
 /**
  * @file
  * @author lyf
- * @date 2015/12/25
- */
+* @date 2015/12/25
+*/
 
-const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE';
+const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE'
 import { isPromise, hasPromiseProps } from './utils'
 
 /**
@@ -13,13 +13,13 @@ import { isPromise, hasPromiseProps } from './utils'
  * @param dispatch
  */
 export default ({pendingStack}) => ({dispatch}) => next => action => {
-  let { meta = {}, payload = {} } = action;
+  let { meta = {}, payload = {} } = action
 
   if (isPromise(payload) || hasPromiseProps(payload)) {
-    const isShowLoading = pendingStack.length === 0 && meta.showLoading !== false;
+    const isShowLoading = pendingStack.length === 0 && meta.showLoading !== false
 
     if (isShowLoading) {
-      pendingStack.push(action.type);
+      pendingStack.push(action.type)
       dispatch({
         type: RECEIVE_LOADING_STATE,
         payload: true
@@ -27,5 +27,5 @@ export default ({pendingStack}) => ({dispatch}) => next => action => {
     }
   }
 
-  return next(action);
+  return next(action)
 }

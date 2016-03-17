@@ -4,57 +4,69 @@
  * @date 2015/12/25
  */
 
-import { isFn, isAxiosResponse, isUCErrorResponse } from './utils'
+import { isFn, isAxiosResponse, isErrorResponse } from './utils'
 
-const RECEIVE_GLOBAL_MESSAGE = 'RECEIVE_GLOBAL_MESSAGE';
-const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE';
-const createGlobalMessage = (type, message, originData) => ({type, message, originData});
+const RECEIVE_GLOBAL_MESSAGE = 'RECEIVE_GLOBAL_MESSAGE'
+const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE'
+const createGlobalMessage = (type, message) => ({type, message})
 
 const transformResponse = response => {
-
   if (Array.isArray(response)) {
-    response = [...response];
-    return response.map(item => isAxiosResponse(item) ? item.data : item);
+    response = [...response]
+    return response.map(item => isAxiosResponse(item) ? item.data : item)
   }
 
   if (isAxiosResponse(response)) {
-    return response.data;
+    return response.data
   }
 
-  response = {...response};
+  response = {...response}
 
   Object.keys(response).forEach(prop => {
-    if (isAxiosResponse(response[prop])) {
-      response[prop] = response[prop].data;
-    }
-  });
+    let propResponse = response[prop]
 
-  return response;
-};
+    if (Array.isArray(propResponse)) {
+      response[prop] = propResponse.map(item => isAxiosResponse(item) ? item.data : item)
+    } else if (isAxiosResponse(propResponse)) {
+      response[prop] = propResponse.data
+    }
+  })
+
+  return response
+}
 
 /**
  * @param data {object|array}
  * @returns {string}
  */
-const getErrorMessage = data => {
-  let response = [].concat(data);
-  let errorMessage = '';
+const getError = data => {
+  let response = [].concat(data)
+  let errorObj = {}
 
   response.some(item => {
-    if (isUCErrorResponse(item)) {
-      errorMessage = item.message;
-      return true;
+    if (isErrorResponse(item)) {
+      errorObj = item
+      return true
     }
     return Object.keys(item).some(prop => {
-      if (isUCErrorResponse(item[prop])) {
-        errorMessage = item[prop].message;
-        return true;
+      let value = item[prop]
+
+      if (Array.isArray(value)) {
+        return value.some(arrItem => {
+          if (isErrorResponse(arrItem)) {
+            errorObj = arrItem
+            return true
+          }
+        })
+      } else if (isErrorResponse(value)) {
+        errorObj = value
+        return true
       }
     })
-  });
+  })
 
-  return errorMessage;
-};
+  return errorObj
+}
 
 const dispatchGlobalMessage = (dispatch, data) => {
   dispatch({
@@ -70,19 +82,19 @@ const dispatchGlobalMessage = (dispatch, data) => {
  * @param dispatch
  */
 export default ({pendingStack}) => ({dispatch}) => next => action => {
-  let { type, meta = {}, payload = {} } = action;
+  let { type, meta = {}, payload = {} } = action
 
   if ([RECEIVE_GLOBAL_MESSAGE, RECEIVE_LOADING_STATE].indexOf(type) !== -1) {
-    return next(action);
+    return next(action)
   }
 
-  const result = next(action);
+  const result = next(action)
 
   // ------------全局loading处理---------------
-  const idx = pendingStack.indexOf(action.type);
+  const idx = pendingStack.indexOf(action.type)
 
   if (idx !== -1) {
-    pendingStack.splice(idx, 1);
+    pendingStack.splice(idx, 1)
 
     if (pendingStack.length === 0) { // loading完成，设置loading状态为false
       dispatch({
@@ -93,23 +105,28 @@ export default ({pendingStack}) => ({dispatch}) => next => action => {
   }
 
   // --------- 全局消息处理（错误，成功）-------------
-  let response = transformResponse(payload);
-  const { success={}, error={}, always } = meta;
+  let response = transformResponse(payload)
+  const { success = {}, error = {}, always } = meta
 
   if (action.error) {
-    let { text, handler } = error;
-    let errorMessage = text || getErrorMessage(response);
+    if (error) {
+      let { text, handler } = error
 
-    dispatchGlobalMessage(dispatch, createGlobalMessage('error', errorMessage));
-    isFn(handler) && handler(response);
+      if (text !== null) {
+        let errorObj = text && {message: text} || getError(response)
+        dispatchGlobalMessage(dispatch, createGlobalMessage('error', errorObj))
+      }
+
+      isFn(handler) && handler(response)
+    }
   } else {
-    let { text, handler } = success;
+    let { text, handler } = success
 
-    text && dispatchGlobalMessage(dispatch, createGlobalMessage('success', text));
-    isFn(handler) && handler(response);
+    text && dispatchGlobalMessage(dispatch, createGlobalMessage('success', text))
+    isFn(handler) && handler(response)
   }
 
-  isFn(always) && always(action);
+  isFn(always) && always(action)
 
-  return result;
+  return result
 }

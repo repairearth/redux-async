@@ -1,7 +1,7 @@
 import expect from 'expect';
 import { createStore, applyMiddleware } from 'redux';
 
-import async, { inject } from '../src';
+import async, { $inject } from '../src';
 
 const getNewStore = (saveAction) => {
   const reducer = function (state, action) {
@@ -68,10 +68,10 @@ describe('redux-async', () => {
       payload: {
         a: Promise.resolve(1),
         b: Promise.resolve(2),
-        c: inject('a', 'b').to((a, b) => {
+        c: $inject((a, b) => {
           (depA = a, depB = b);
           return Promise.resolve(3)
-        })
+        })('a', 'b')
       }
     });
   });
@@ -94,14 +94,14 @@ describe('redux-async', () => {
       payload: {
         a: Promise.resolve(1),
         b: Promise.resolve(2),
-        c: inject('a', 'b').to((a, b) => {
+        c: $inject((a, b) => {
           (depA = a, depB = b);
           return Promise.resolve(3);
-        }),
-        d: inject('c', 'b', 'a', 'e').to((c, b, a) => {
+        })('a', 'b'),
+        d: $inject((c, b, a) => {
           (depDA = a, depDB = b, depDC = c);
           return Promise.resolve(4);
-        })
+        })('c', 'b', 'a', 'e')
       },
       meta: {
         other: 'other'
@@ -130,12 +130,12 @@ describe('redux-async', () => {
         b: 'string',
         c: 100,
         d: Promise.reject(new Error('another error property')),
-        e: inject('d').to((d) => {
+        e: $inject((d) => {
           return Promise.reject(new Error('5'));
-        }),
-        f: inject('a').to((a) => {
+        })('d'),
+        f: $inject((a) => {
           return Promise.reject(new Error('6'));
-        })
+        })('a')
       }
     });
   });
@@ -160,12 +160,12 @@ describe('redux-async', () => {
         b: 'string',
         c: 100,
         d: Promise.resolve(2),
-        e: inject('d').to((d) => {
+        e: $inject((d) => {
           return Promise.reject(new Error('5'));
-        }),
-        f: inject('e', 'g').to((e) => {
+        })('d'),
+        f: $inject((e) => {
           return Promise.reject(new Error('6'));
-        })
+        })('e', 'g')
       }
     });
   });
@@ -185,9 +185,9 @@ describe('redux-async', () => {
       payload: {
         a: Promise.resolve(1),
         b: Promise.resolve(2),
-        c: inject('b').to((b) => {
+        c: $inject((b) => {
           return Promise.reject(new Error('error message'));
-        })
+        })('b')
       },
       meta: {
         a: {

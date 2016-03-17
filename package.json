@@ -1,6 +1,6 @@
 {
   "name": "redux-async-promise",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "dispatch async actions in redux",
   "main": "./lib/trader.js",
   "scripts": {
