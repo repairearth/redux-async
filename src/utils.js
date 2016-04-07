@@ -5,6 +5,7 @@
  */
 
 export const API_REQUEST_ERROR = 'API_REQUEST_ERROR'
+export const isAsync = Symbol('isAsync')
 export const isFn = arg => typeof arg === 'function'
 export const isObject = obj => Object.prototype.toString.call(obj) === '[object Object]'
 export const isPromise = obj => obj && typeof obj.then === 'function'

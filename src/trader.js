@@ -7,17 +7,21 @@
 import * as utils from './utils'
 
 export default store => next => action => {
-  const { payload } = action
+  try {
+    const { payload } = action
 
-  if (utils.isPromise(payload)) {
-    return payload.then(
-      result => next({...action, payload: result}),
-      error => next({...action, payload: error, error: true})
-    )
-  } else if (utils.hasPromiseProps(payload)) {
-    return process(action, next)
-  } else {
-    return next(action)
+    if (utils.isPromise(payload)) {
+      return payload.then(
+        result => next({...action, payload: result}),
+        error => next({...action, payload: error, error: true})
+      )
+    } else if (utils.hasPromiseProps(payload)) {
+      return process(action, next)
+    } else {
+      return next(action)
+    }
+  } catch(error) {
+    console && console.log(error)
   }
 }
 

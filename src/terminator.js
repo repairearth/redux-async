@@ -4,7 +4,7 @@
  * @date 2015/12/25
  */
 
-import { isFn, isAxiosResponse, isErrorResponse } from './utils'
+import { isFn, isAxiosResponse, isErrorResponse, isAsync} from './utils'
 
 const RECEIVE_GLOBAL_MESSAGE = 'RECEIVE_GLOBAL_MESSAGE'
 const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE'
@@ -103,6 +103,8 @@ export default ({pendingStack}) => ({dispatch}) => next => action => {
       })
     }
   }
+
+  if (action[isAsync] !== true) return result
 
   // --------- 全局消息处理（错误，成功）-------------
   let response = transformResponse(payload)

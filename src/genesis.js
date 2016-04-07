@@ -5,7 +5,7 @@
 */
 
 const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE'
-import { isPromise, hasPromiseProps } from './utils'
+import { isPromise, hasPromiseProps, isAsync } from './utils'
 
 /**
  * meta.showLoading {boolean} @default [true] if payload is a promise
@@ -16,6 +16,7 @@ export default ({pendingStack}) => ({dispatch}) => next => action => {
   let { meta = {}, payload = {} } = action
 
   if (isPromise(payload) || hasPromiseProps(payload)) {
+    action[isAsync] = true
     const isShowLoading = pendingStack.length === 0 && meta.showLoading !== false
 
     if (isShowLoading) {
