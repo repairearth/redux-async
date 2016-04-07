@@ -5,11 +5,11 @@
  */
 
 export const API_REQUEST_ERROR = 'API_REQUEST_ERROR'
-export const isAsync = Symbol('isAsync')
+export const isAsync = 'IS_API_REQUEST_ASYNC'
 export const isFn = arg => typeof arg === 'function'
 export const isObject = obj => Object.prototype.toString.call(obj) === '[object Object]'
 export const isPromise = obj => obj && typeof obj.then === 'function'
-export const hasPromiseProps = obj => obj && Object.keys(obj).some(key => isPromise(obj[key]) || hasDeps(obj[key]))
+export const hasPromiseProps = obj => isObject(obj) && Object.keys(obj).some(key => isPromise(obj[key]) || hasDeps(obj[key]))
 
 export const $inject = fn => (...deps) => {
   if (isFn(fn) && deps.length) {
