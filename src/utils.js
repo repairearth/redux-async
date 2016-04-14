@@ -5,6 +5,7 @@
  */
 
 export const API_REQUEST_ERROR = 'API_REQUEST_ERROR'
+export const ACTION_PENDING = 'PENDING'
 export const isAsync = 'IS_API_REQUEST_ASYNC'
 export const isFn = arg => typeof arg === 'function'
 export const isObject = obj => Object.prototype.toString.call(obj) === '[object Object]'

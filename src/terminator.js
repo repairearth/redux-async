@@ -81,7 +81,7 @@ const dispatchGlobalMessage = (dispatch, data) => {
  * meta.always {function}
  * @param dispatch
  */
-export default ({pendingStack}) => ({dispatch}) => next => action => {
+export default ({loadingStack}) => ({dispatch}) => next => action => {
   let { type, meta = {}, payload = {} } = action
 
   if ([RECEIVE_GLOBAL_MESSAGE, RECEIVE_LOADING_STATE].indexOf(type) !== -1) {
@@ -91,12 +91,12 @@ export default ({pendingStack}) => ({dispatch}) => next => action => {
   const result = next(action)
 
   // ------------全局loading处理---------------
-  const idx = pendingStack.indexOf(action.type)
+  const idx = loadingStack.indexOf(action.type)
 
   if (idx !== -1) {
-    pendingStack.splice(idx, 1)
+    loadingStack.splice(idx, 1)
 
-    if (pendingStack.length === 0) { // loading完成，设置loading状态为false
+    if (loadingStack.length === 0) { // loading完成，设置loading状态为false
       dispatch({
         type: RECEIVE_LOADING_STATE,
         payload: false

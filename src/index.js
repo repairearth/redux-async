@@ -9,7 +9,7 @@ import trader from './trader'
 import _terminator from './terminator'
 
 let options = {
-  pendingStack: []
+  loadingStack: []
 }
 
 export { $inject } from './utils'
