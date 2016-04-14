@@ -5,7 +5,7 @@
 */
 
 const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE'
-import { isPromise, hasPromiseProps, isAsync, ACTION_PENDING } from './utils'
+import { isPromise, hasPromiseProps, hasDeps, isAsync, ACTION_PENDING } from './utils'
 
 /**
  * meta.showLoading {boolean} @default [true] if payload is a promise
@@ -29,9 +29,22 @@ export default ({loadingStack}) => ({dispatch}) => next => action => {
     }
 
     if (isDispatchPending) {
+      const { payload } = action
+      let newPayload = {}
+
+      if (!isPromise(payload)) {
+        // remove promise property
+        newPayload = {...payload}
+        Object.keys(newPayload).forEach(key => {
+          if (isPromise(newPayload[key]) || hasDeps(newPayload[key])) {
+            delete newPayload[key]
+          }
+        })
+      }
+
       dispatch({
         type: `${action.type}-${ACTION_PENDING}`,
-        payload: action.payload,
+        payload: newPayload,
         meta: action.meta
       })
     }
