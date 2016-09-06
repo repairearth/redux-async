@@ -115,8 +115,10 @@ export default ({loadingStack}) => ({dispatch}) => next => action => {
       let { text, handler } = error
 
       if (text !== null) {
-        let errorObj = text && {message: text} || getError(response)
-        dispatchGlobalMessage(dispatch, createGlobalMessage('error', errorObj))
+        let error = getError(response)
+
+        error.message = text || error.message
+        dispatchGlobalMessage(dispatch, createGlobalMessage('error', error))
       }
 
       isFn(handler) && handler(response)
