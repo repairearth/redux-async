@@ -11,6 +11,10 @@ const RECEIVE_LOADING_STATE = 'RECEIVE_LOADING_STATE'
 const createGlobalMessage = (type, message) => ({type, message})
 
 const transformResponse = response => {
+  if (response instanceof Error) {
+    return response
+  }
+
   if (Array.isArray(response)) {
     response = [...response]
     return response.map(item => isAxiosResponse(item) ? item.data : item)

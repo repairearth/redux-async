@@ -78,6 +78,9 @@ const process = (action, next) => {
   }, Promise.resolve(true))
     .then(result => next(action))
     .catch(error => {
+      if (error instanceof Error) {
+        throw error
+      }
       resolver(currentResolvedProps)(error)
       return next({...action, error: true})
     })

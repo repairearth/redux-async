@@ -38,7 +38,7 @@ export const isAxiosResponse = response => {
 }
 
 export const isErrorResponse = response => {
-  return isObject(response) && ['code', 'host_id', 'message', 'request_id', 'server_time'].every(key => key in response)
+  return (response instanceof Error) || (isObject(response) && ['code', 'host_id', 'message', 'request_id', 'server_time'].every(key => key in response))
 }
 
 /**
@@ -59,6 +59,7 @@ export const PromiseAll = arr => {
     const callback = (i, error) => res => {
       if (error) {
         isError = true
+        //TODO res可能为基本类型数据如string
         res[API_REQUEST_ERROR] = true
       }
 
