@@ -14,7 +14,9 @@ export const hasPromiseProps = obj => isObject(obj) && Object.keys(obj).some(key
 
 export const $inject = fn => (...deps) => {
   if (isFn(fn) && deps.length) {
-    fn.$deps = deps
+    let _fn = fn.bind()
+    _fn.$deps = deps
+    return _fn
   }
   return fn
 }
