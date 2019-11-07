@@ -109,7 +109,7 @@ const process = (action, next) => {
         }
       }
 
-      delete result[utils.API_REQUEST_ERROR] // delete non-used property
+      result && delete result[utils.API_REQUEST_ERROR] // delete non-used property
       payload[prop] = result
 
       return payload

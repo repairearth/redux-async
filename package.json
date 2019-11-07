@@ -1,6 +1,6 @@
 {
   "name": "redux-async-promise",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "description": "dispatch async actions in redux",
   "main": "./lib/index.js",
   "scripts": {
